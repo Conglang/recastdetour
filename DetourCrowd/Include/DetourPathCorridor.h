@@ -20,21 +20,30 @@
 #define DETOUTPATHCORRIDOR_H
 
 #include "DetourNavMeshQuery.h"
+#include "DetourCommon.h"
 
 /// Represents a dynamic polygon corridor used to plan agent movement.
-/// @ingroup crowd, detour
+/// @ingroup behavior, detour
 class dtPathCorridor
 {
-	float m_pos[3];
-	float m_target[3];
+	float m_pos[3];		///< The position of the agent in the corridor
+	float m_target[3];	///< The destination of the agent in the corridor
 	
-	dtPolyRef* m_path;
-	int m_npath;
-	int m_maxPath;
+	dtPolyRef* m_path;	///< The path as an array of polygon
+	int m_npath;		///< The number of polygon in the path
+	int m_maxPath;		///< The maximum path size the corridor can handle
+
+	bool m_isSet;		///< Has the start of the corridor been set with an agent position?
 	
 public:
 	dtPathCorridor();
 	~dtPathCorridor();
+
+	/// Copy constructor
+	dtPathCorridor(const dtPathCorridor& o);
+
+	/// Assignment operator
+	dtPathCorridor& operator=(const dtPathCorridor& o);
 	
 	/// Allocates the corridor's path buffer. 
 	///  @param[in]		maxPath		The maximum path size the corridor can handle.
@@ -57,7 +66,7 @@ public:
 	/// @return The number of corners returned in the corner buffers. [0 <= value <= @p maxCorners]
 	int findCorners(float* cornerVerts, unsigned char* cornerFlags,
 					dtPolyRef* cornerPolys, const int maxCorners,
-					dtNavMeshQuery* navquery, const dtQueryFilter* filter);
+					const dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
 	/// Attempts to optimize the path if the specified point is visible from the current position.
 	///  @param[in]		next					The point to search toward. [(x, y, z])
@@ -65,42 +74,86 @@ public:
 	///  @param[in]		navquery				The query object used to build the corridor.
 	///  @param[in]		filter					The filter to apply to the operation.			
 	void optimizePathVisibility(const float* next, const float pathOptimizationRange,
-								dtNavMeshQuery* navquery, const dtQueryFilter* filter);
+								const dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
 	/// Attempts to optimize the path using a local area search. (Partial replanning.) 
 	///  @param[in]		navquery	The query object used to build the corridor.
 	///  @param[in]		filter		The filter to apply to the operation.	
 	bool optimizePathTopology(dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
+	/// Updates the corridor to move through an off-mesh connection
+	///
+	/// @param[in]	offMeshConRef	A reference to the off-mesh connection polygon
+	/// @param[out]	refs			Array containing the reference polygon before the off mesh connection, 
+	///								and a reference to the off mesh connection polygon
+	/// @param[out]	startPos		The start position of the off-mesh connection. [(x, y, z)]
+	/// @param[out]	endPos			The end position of the off-mesh connection. [(x, y, z)]
+	/// @param[in]	navquery		The navigation mesh query
+	/// @return	False if the #offMeshConRef could not be found or if the move could not be done. True otherwise.
 	bool moveOverOffmeshConnection(dtPolyRef offMeshConRef, dtPolyRef* refs,
 								   float* startPos, float* endPos,
-								   dtNavMeshQuery* navquery);
+								   const dtNavMeshQuery* navquery);
 
+	/// Used to make sure the first polygon of the start is valid.
+	/// Updates the position and the polygon of the first element of the path
+	/// @param[in]	safeRef		The safe reference to the first polygon
+	/// @param[in]	safePos		The safe start position. [(x, y, z)]
+	/// @return Returns True
 	bool fixPathStart(dtPolyRef safeRef, const float* safePos);
 
+	/// Reconstructs the path so that all polygons can be valid
+	///
+	/// @param[in]	safeRef		The safe reference for the first polygon
+	/// @param[in]	safePos		The safe start position. [(x, y, z)]
+	/// @param[in]	navquery	The navigation mesh query
+	/// @param[in]	filter		The Query Filter
+	/// @returns True
 	bool trimInvalidPath(dtPolyRef safeRef, const float* safePos,
 						 dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
 	/// Checks the current corridor path to see if its polygon references remain valid. 
 	///  @param[in]		maxLookAhead	The number of polygons from the beginning of the corridor to search.
-	///  @param[in]		navquery		The query object used to build the corridor.
+	///  @param[in]		navquery		The query objec  t used to build the corridor.
 	///  @param[in]		filter			The filter to apply to the operation.	
-	bool isValid(const int maxLookAhead, dtNavMeshQuery* navquery, const dtQueryFilter* filter);
+	bool isValid(const int maxLookAhead, const dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
 	/// Moves the position from the current location to the desired location, adjusting the corridor 
 	/// as needed to reflect the change.
+	///
+	/// Behavior:
+	/// - The movement is constrained to the surface of the navigation mesh.
+	/// - The corridor is automatically adjusted (shorted or lengthened) in order to remain valid.
+	/// - The new position will be located in the adjusted corridor's first polygon.
+	///
+	/// The expected use case is that the desired position will be 'near' the current corridor. What is considered 'near'
+	/// depends on local polygon density, query search extents, etc.
+	///
+	/// The resulting position will differ from the desired position if the desired position is not on the navigation mesh,
+	/// or it can't be reached using a local search.
+	///
 	///  @param[in]		npos		The desired new position. [(x, y, z)]
 	///  @param[in]		navquery	The query object used to build the corridor.
 	///  @param[in]		filter		The filter to apply to the operation.
-	/// @return Returns true if move succeeded.
-	bool movePosition(const float* npos, dtNavMeshQuery* navquery, const dtQueryFilter* filter);
+	///  @return Returns true if move succeeded.
+	bool movePosition(const float* npos, const dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 
 	/// Moves the target from the curent location to the desired location, adjusting the corridor
-	/// as needed to reflect the change. 
+	/// as needed to reflect the change.
+	///
+	/// Behavior:
+	/// - The movement is constrained to the surface of the navigation mesh.
+	/// - The corridor is automatically adjusted (shorted or lengthened) in order to remain valid.
+	/// - The new target will be located in the adjusted corridor's last polygon.
+	///
+	/// The expected use case is that the desired target will be 'near' the current corridor. What is considered 'near' depends
+	/// on local polygon density, query search extents, etc.
+	/// The resulting target will differ from the desired target if the desired target is not on the navigation mesh, or it can't
+	/// be reached using a local search.
+	///
 	///  @param[in]		npos		The desired new target position. [(x, y, z)]
 	///  @param[in]		navquery	The query object used to build the corridor.
 	///  @param[in]		filter		The filter to apply to the operation.
-	/// @return Returns true if move succeeded.
+	///  @return Returns true if move succeeded.
 	bool moveTargetPosition(const float* npos, dtNavMeshQuery* navquery, const dtQueryFilter* filter);
 	
 	/// Loads a new path and target into the corridor.
@@ -116,6 +169,8 @@ public:
 	/// Gets the current target within the corridor. (In the last polygon.)
 	/// @return The current target within the corridor.
 	inline const float* getTarget() const { return m_target; }
+
+	inline bool isSet() const { return m_isSet; }
 	
 	/// The polygon reference id of the first polygon in the corridor, the polygon containing the position.
 	/// @return The polygon reference id of the first polygon in the corridor. (Or zero if there is no path.)
@@ -131,7 +186,9 @@ public:
 
 	/// The number of polygons in the current corridor path.
 	/// @return The number of polygons in the current corridor path.
-	inline int getPathCount() const { return m_npath; } 	
+	inline int getPathCount() const { return m_npath; }
+
+	static const int MAX_VISITED = 16;
 };
 
 int dtMergeCorridorStartMoved(dtPolyRef* path, const int npath, const int maxPath,

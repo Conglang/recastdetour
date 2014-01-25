@@ -1,0 +1,14 @@
+{
+	"settings":
+	{
+		"file_exclude_patterns": [".exe", ".dll", ".o", ".a", ".lib", ".so", ".dylib", ".ncb", ".sdf", ".suo", ".pdb", ".idb", ".DS_Store", ".db", ".sublime-workspace"],
+		"tab_size": 4
+	},
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "../../"
+		}
+	]
+}

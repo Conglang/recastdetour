@@ -187,6 +187,9 @@ void rcFreePolyMeshDetail(rcPolyMeshDetail* dmesh)
 void rcCalcBounds(const float* verts, int nv, float* bmin, float* bmax)
 {
 	// Calculate bounding box.
+	if (nv < 1)
+		return;
+
 	rcVcopy(bmin, verts);
 	rcVcopy(bmax, verts);
 	for (int i = 1; i < nv; ++i)

@@ -1,21 +1,23 @@
-## Compiled source #
-*.com
-*.class
-*.dll
-*.exe
-*.ilk
-*.o
-*.pdb
-*.so
+#Cmake generation results
+build/*
 
-## Linux exes have no extension
-RecastDemo/Bin/RecastDemo
+# Sublime text project
+!build/sublime
+build/sublime/RecastDetour.sublime-workspace
 
-# Build directory
-RecastDemo/Build
+# Bin content
+/*/Bin/*
+!/*/Bin/*.ttf
+!/*/Bin/Meshes/
+!/*/Bin/Samples/
+!/*/Bin/Tests/
 
 # Ignore some meshes based on name
 RecastDemo/Bin/Meshes/_*
+
+# Doxygen generation output
+Docs/out
+Docs/html/
 
 ## Logs and databases #
 *.log
@@ -32,9 +34,3 @@ ehthumbs.db
 Thumbs.db
 *.swp
 *.swo
-
-## xcode specific
-*xcuserdata*
-
-## SDL contrib
-RecastDemo/Contrib/SDL/*

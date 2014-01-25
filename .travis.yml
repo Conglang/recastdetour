@@ -1,0 +1,20 @@
+language: cpp
+compiler:
+    - gcc
+    - clang
+script: 
+    - cmake -DCMAKE_INSTALL_PREFIX=./out ./
+    - make all
+    - ctest -C Release --output-on-failure
+    - make install
+
+notifications:
+  email:
+    recipients:
+        - recastdetour@masagroup.net
+    on_success: change
+    on_failure: always
+
+branches:
+  except:
+    - gh-pages

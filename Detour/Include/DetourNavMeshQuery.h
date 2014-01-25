@@ -143,10 +143,11 @@ public:
 	///  							[(polyRef) * @p pathCount]
 	///  @param[out]	pathCount	The number of polygons returned in the @p path array.
 	///  @param[in]		maxPath		The maximum number of polygons the @p path array can hold. [Limit: >= 1]
+	///  @param[out]	pathCost	The cost of the path found (0 if no path is found).
 	dtStatus findPath(dtPolyRef startRef, dtPolyRef endRef,
 					  const float* startPos, const float* endPos,
 					  const dtQueryFilter* filter,
-					  dtPolyRef* path, int* pathCount, const int maxPath) const;
+					  dtPolyRef* path, int* pathCount, const int maxPath, float* pathCost = 0) const;
 	
 	/// Finds the straight path from the start to the end position within the polygon corridor.
 	///  @param[in]		startPos			Path start position. [(x, y, z)]
@@ -252,17 +253,29 @@ public:
 	/// @}
 	/// @name Local Query Functions
 	///@{
-
-	/// Finds the polygon nearest to the specified center point.
-	///  @param[in]		center		The center of the search box. [(x, y, z)]
-	///  @param[in]		extents		The search distance along each axis. [(x, y, z)]
-	///  @param[in]		filter		The polygon filter to apply to the query.
-	///  @param[out]	nearestRef	The reference id of the nearest polygon.
-	///  @param[out]	nearestPt	The nearest point on the polygon. [opt] [(x, y, z)]
+	
+	/// Find the nearest to the given position navmesh polygon
+	///
+	/// @param[in]  position The position [(x, y, z)].
+	/// @param[in]  extents The search distance along each axis [(x, y, z)].
+	/// @param[in]  filter The polygon filter to apply to the query.
+	/// @param[out]	nearestPolygon The nearest polygon.
+	/// @param[out]	nearestPosition	The nearest position on the polygon [opt] [(x, y, z)].
+	///
 	/// @returns The status flags for the query.
-	dtStatus findNearestPoly(const float* center, const float* extents,
+	///
+	/// @note If the search box does not intersect any polygons the search will
+	/// return #DT_SUCCESS, but `nearestPolygon` will be zero. So if in doubt, check
+	/// `nearestPolygon` before using `nearestPosition`.
+	///
+	/// @warning This function is not suitable for large area searches.  If the
+	/// search extents overlaps more than 128 polygons it may return an invalid
+	/// result.
+	dtStatus findNearestPoly(const float* position,
+							 const float* extents,
 							 const dtQueryFilter* filter,
-							 dtPolyRef* nearestRef, float* nearestPt) const;
+							 dtPolyRef* nearestPolygon,
+							 float* nearestPosition) const;
 	
 	/// Finds polygons that overlap the search box.
 	///  @param[in]		center		The center of the search box. [(x, y, z)]
@@ -292,19 +305,41 @@ public:
 									dtPolyRef* resultRef, dtPolyRef* resultParent,
 									int* resultCount, const int maxResult) const;
 
-	/// Moves from the start to the end position constrained to the navigation mesh.
-	///  @param[in]		startRef		The reference id of the start polygon.
-	///  @param[in]		startPos		A position of the mover within the start polygon. [(x, y, x)]
-	///  @param[in]		endPos			The desired end position of the mover. [(x, y, z)]
-	///  @param[in]		filter			The polygon filter to apply to the query.
-	///  @param[out]	resultPos		The result position of the mover. [(x, y, z)]
-	///  @param[out]	visited			The reference ids of the polygons visited during the move.
-	///  @param[out]	visitedCount	The number of polygons visited during the move.
-	///  @param[in]		maxVisitedSize	The maximum number of polygons the @p visited array can hold.
+	/// Move a *point*, constrained by the navigation mesh from the given start
+	/// to end positions.
+	///
+	/// @param[in]  startPoly The movement start polygon.
+	/// @param[in]  startPos The movement start position, within the start polygon. [(x, y, x)]
+	/// @param[in]  desiredEndPos The movement desired end position. [(x, y, z)]
+	/// @param[in]  filter The polygon filter to apply to the query.
+	/// @param[out] endPoly The movement actual end polygon [opt].
+	/// @param[out] endPos The movement actual end position, the closest to `desiredEndPos`
+	/// reachable position [(x, y, z)] [opt].
+	/// @param[out] visited The polygons visited while computing the movement [opt].
+	/// @param[out] visitedCount he number of polygons visited during the movement [opt].
+	/// @param[in]  visitedSize The size of the `visited` array (ie the number of polygon it can
+	/// hold). If too small to hold the entire result set, the array will be filled as far as
+	/// possible from the start position toward the end position.[opt].
 	/// @returns The status flags for the query.
-	dtStatus moveAlongSurface(dtPolyRef startRef, const float* startPos, const float* endPos,
+	///
+	/// @note  This method treats the end position in the same manner as
+	/// the #raycast method (ie as a 2D point). See that method's documentation
+	/// for details. As a result `endPos` is not projected onto the surface of the
+	/// navigation mesh. Use #getPolyHeight if this is needed.
+	///
+	/// @warning This method is optimized for small delta movement and a small number of
+	/// polygons. If used for too great a distance, the result set will form an
+	/// incomplete path.
+	///
+	dtStatus moveAlongSurface(dtPolyRef startPoly,
+							  const float* startPos,
+							  const float* desiredEndPos,
 							  const dtQueryFilter* filter,
-							  float* resultPos, dtPolyRef* visited, int* visitedCount, const int maxVisitedSize) const;
+							  dtPolyRef* endPoly,
+							  float* endPos,
+							  dtPolyRef* visited,
+							  int* visitedCount,
+							  const int visitedSize) const;
 	
 	/// Casts a 'walkability' ray along the surface of the navigation mesh from 
 	/// the start position toward the end position.
@@ -365,6 +400,7 @@ public:
 	/// The location is not exactly constrained by the circle, but it limits the visited polygons.
 	///  @param[in]		startRef		The reference id of the polygon where the search starts.
 	///  @param[in]		centerPos		The center of the search circle. [(x, y, z)]
+	///  @param[in]		maxRadius		The maximal radius of an agent.
 	///  @param[in]		filter			The polygon filter to apply to the query.
 	///  @param[in]		frand			Function returning a random number [0..1).
 	///  @param[out]	randomRef		The reference id of the random location.
@@ -428,9 +464,14 @@ private:
 	/// Queries polygons within a tile.
 	int queryPolygonsInTile(const dtMeshTile* tile, const float* qmin, const float* qmax, const dtQueryFilter* filter,
 							dtPolyRef* polys, const int maxPolys) const;
+
 	/// Find nearest polygon within a tile.
-	dtPolyRef findNearestPolyInTile(const dtMeshTile* tile, const float* center, const float* extents,
-									const dtQueryFilter* filter, float* nearestPt) const;
+	dtPolyRef findNearestPolyInTile(const dtMeshTile* tile,
+									const float* position,
+									const float* extents,
+									const dtQueryFilter* filter,
+									float* nearestPosition) const;
+	
 	/// Returns closest point on polygon.
 	void closestPointOnPolyInTile(const dtMeshTile* tile, const dtPoly* poly, const float* pos, float* closest) const;
 	
