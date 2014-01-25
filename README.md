@@ -2,16 +2,17 @@
 
 *contributions are welcome, using pull requests to the [integration](https://github.com/masagroup/recastdetour/tree/integration) branch*
 
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/masagroup/recastdetour/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
 # About #
 
 This repository is a fork of [recastnavigation](https://github.com/memononen/recastnavigation) whose original author is [Mikko Mononen](memon@inside.org).
 The fork is maintainted by MASA Group´s product team of [MASA LIFE](http://masalife.net).
 To see our latest news in artificial intelligence you can follow our tweet - [@masalife_ai](https://twitter.com/masalife_ai).
 
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/memononen/recastnavigation/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
-This library is releaed under the terms of the open souce [Zlib license](http://opensource.org/licenses/Zlib).
 ![screenshot of a navmesh baked with the sample program](/RecastDemo/screenshot.png?raw=true)
+
+This library is released under the terms of the open souce [Zlib license](http://opensource.org/licenses/Zlib).
 
 ## Recast ##
 
@@ -93,21 +94,34 @@ The Detour Crowd module provides you with features for agents handling and behav
 
 # Contributors #
 
-## [Origin](https://github.com/memononen/recastnavigation) repository contributors ##
-- Mikko Mononen <memon@inside.org>
-- Stephen Pratt <stevefsp@gmail.com>
-- Cameron Hart <cameron.hart@gmail.com>
+## [Origin repository](https://github.com/memononen/recastnavigation) contributors ##
+- [@memononen (Mikko Mononen)](https://github.com/memononen)
+- [@stevefsp (Stephen Pratt)](https://github.com/stevefsp)
+- [@bitshifter (Cameron Hart)](https://github.com/bitshifter)
+- [@axelrodR](https://github.com/axelrodR)
+- [@grahamboree](https://github.com/grahamboree)
+- [@mendsley (Matthew Endsley)](https://github.com/mendsley)
+- [@flippy84](https://github.com/flippy84)
 
 ## [MASA LIFE](http://www.masalife.net) team contributors ##
-- Clodéric Mars <cloderic.mars@masagroup.net>
-- Damien Avrillon <damien.avrillon@masagroup.net>
-- Joel Joly <joel.joly@masagroup.net>
+- [@cloderic (Clodéric Mars)](https://github.com/cloderic)
+- [@Akkarinn (Damien Avrillon)](https://github.com/Akkarinn)
+- [@JoelJoly (Joël Joly)](https://github.com/JoelJoly)
 
-## Other contributors ##
-- Jérémy Chanut <jeremy.chanut@gmail.com>
-- Charles Prévot <prevot@cervval.com>
+## Other [MASA repository](https://github.com/masagroup/recastdetour) contributors ##
+- [@Skiss (Jérémy Chanut)](https://github.com/Skiss)
+- [@MrMagne (Charles Prévot)](https://github.com/MrMagne)
 
 # Release Notes #
+
+## Recast/Detour 2.0.3 ##
+**Released tbd**
+
+- Integrating recent changes for the [_origin_ repository](https://github.com/memononen/recastnavigation):
+    - Navmesh generation performance optimizations (from [memononen/recastnavigation#13](https://github.com/memononen/recastnavigation/pull/13),
+    - Adding support for 64bits navmesh indices (from [memononen/recastnavigation@6a7f5268](https://github.com/memononen/recastnavigation/tree/6a7f5268)),
+    - Various other fixes and small enhancements,
+    - _NOT integrated_ Replacing CMake with premake4.
 
 ## Recast/Detour 2.0.2 ##
 **Released October 8th, 2013**
@@ -169,7 +183,6 @@ The Detour Crowd module provides you with features for agents handling and behav
 
 ## Recast 1.2 ##
 **Released June 17th, 2009**
-- *Linux*: `premake4 gmake`
 
 - Added tiled mesh generation. The tiled generation allows to generate navigation for
   much larger worlds, it removes some of the artifacts that comes from distance fields
@@ -192,16 +205,3 @@ This is the first release of Detour.
 **Released March 29th, 2009**
 
 This is the first release of Recast.
-
-The process is not always as robust as I would wish. The watershed phase sometimes swallows tiny islands
-which are close to edges. These droppings are handled in rcBuildContours, but the code is not
-particularly robust either.
-
-Another non-robust case is when portal contours (contours shared between two regions) are always
-assumed to be straight. That can lead to overlapping contours specially when the level has
-large open areas.
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/masagroup/recastdetour/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
-Recast & Detour is licensed under ZLib license, see License.txt for more information.
