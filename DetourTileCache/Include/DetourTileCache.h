@@ -105,6 +105,10 @@ public:
 	
 	dtStatus addObstacle(const float* pos, const float radius, const float height, dtObstacleRef* result);
 	dtStatus removeObstacle(const dtObstacleRef ref);
+	dtStatus editObstaclePos(const dtObstacleRef ref, const float* pos);
+	dtStatus editObstacleRadius(const dtObstacleRef ref, const float& radius);
+	dtStatus editObstacleHeight(const dtObstacleRef ref, const float& height);
+
 	
 	dtStatus queryTiles(const float* bmin, const float* bmax,
 						dtCompressedTileRef* results, int* resultCount, const int maxResults) const;
@@ -167,6 +171,7 @@ private:
 	{
 		REQUEST_ADD,
 		REQUEST_REMOVE,
+		REQUEST_EDIT,
 	};
 	
 	struct ObstacleRequest

@@ -399,6 +399,81 @@ dtObstacleRef dtTileCache::removeObstacle(const dtObstacleRef ref)
 	return DT_SUCCESS;
 }
 
+dtStatus dtTileCache::editObstaclePos( const dtObstacleRef ref, const float* pos )
+{
+	if (!ref)
+		return DT_FAILURE;
+	if (m_nreqs >= MAX_REQUESTS)
+		return DT_FAILURE | DT_BUFFER_TOO_SMALL;
+
+	dtTileCacheObstacle* ob = const_cast<dtTileCacheObstacle*>(getObstacleByRef(ref));
+	if (!ob)
+	{
+		return DT_FAILURE;
+	}
+	unsigned short salt = ob->salt;
+	ob->salt = salt;
+	ob->state = DT_OBSTACLE_PROCESSING;
+	dtVcopy(ob->pos, pos);
+
+	ObstacleRequest* req = &m_reqs[m_nreqs++];
+	memset(req, 0, sizeof(ObstacleRequest));
+	req->action = REQUEST_EDIT;
+	req->ref = ref;
+
+	return DT_SUCCESS;
+}
+
+dtStatus dtTileCache::editObstacleRadius( const dtObstacleRef ref, const float& radius )
+{
+	if (!ref)
+		return DT_FAILURE;
+	if (m_nreqs >= MAX_REQUESTS)
+		return DT_FAILURE | DT_BUFFER_TOO_SMALL;
+
+	dtTileCacheObstacle* ob = const_cast<dtTileCacheObstacle*>(getObstacleByRef(ref));
+	if (!ob)
+	{
+		return DT_FAILURE;
+	}
+	unsigned short salt = ob->salt;
+	ob->salt = salt;
+	ob->state = DT_OBSTACLE_PROCESSING;
+	ob->radius = radius;
+
+	ObstacleRequest* req = &m_reqs[m_nreqs++];
+	memset(req, 0, sizeof(ObstacleRequest));
+	req->action = REQUEST_EDIT;
+	req->ref = ref;
+
+	return DT_SUCCESS;
+}
+
+dtStatus dtTileCache::editObstacleHeight( const dtObstacleRef ref, const float& height )
+{
+	if (!ref)
+		return DT_FAILURE;
+	if (m_nreqs >= MAX_REQUESTS)
+		return DT_FAILURE | DT_BUFFER_TOO_SMALL;
+
+	dtTileCacheObstacle* ob = const_cast<dtTileCacheObstacle*>(getObstacleByRef(ref));
+	if (!ob)
+	{
+		return DT_FAILURE;
+	}
+	unsigned short salt = ob->salt;
+	ob->salt = salt;
+	ob->state = DT_OBSTACLE_PROCESSING;
+	ob->height = height;
+
+	ObstacleRequest* req = &m_reqs[m_nreqs++];
+	memset(req, 0, sizeof(ObstacleRequest));
+	req->action = REQUEST_EDIT;
+	req->ref = ref;
+
+	return DT_SUCCESS;
+}
+
 dtStatus dtTileCache::queryTiles(const float* bmin, const float* bmax,
 								 dtCompressedTileRef* results, int* resultCount, const int maxResults) const 
 {
